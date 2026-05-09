@@ -9,9 +9,16 @@ const Search = document.getElementById('InputBTN')
 let keyword = ""
 let page = 1;
 
+const DownloadPopup = document.getElementById('DownloadPopup');
+const YesDownload = document.getElementById('YesDownload');
+const ClosePopup = document.getElementById('ClosePopup');
+
+let CurrentDownloadLink = "";
+
+
 async function SearchEngine() {
 
-    keyword = FormInput.value.trim(); // .trim() removes accidental spaces
+    keyword = FormInput.value.trim();
 
     if (keyword === "") {
         SearchResult.innerHTML = "<p>Please type something to search...</p>";
@@ -19,6 +26,10 @@ async function SearchEngine() {
         return; 
     }
     ShowMoreBTN.innerText = "Loading...";
+
+    if(page === 1){
+        SearchResult.innerHTML = "<p>Please wait, images are being loaded...</p>";
+    }
 
     keyword = FormInput.value;
     const url = `https://api.unsplash.com/search/photos?page=${page}&query=${keyword}&client_id=${AccsesKey}&per_page=12`;
@@ -39,16 +50,43 @@ async function SearchEngine() {
         ShowMoreBTN.style.display = "none"
         return;
     }
+    
 
-    Results.map((result)=>{
-        const image = document.createElement('img')
+    Results.map((result) => {
+
+        const image = document.createElement('img');
         image.src = result.urls.small;
-        const imgA = document.createElement('a')
-        imgA.href = result.links.html;
-        imgA.target = "_blank";
-        imgA.appendChild(image);
-        SearchResult.appendChild(imgA);
-    })
+
+        let Adownload = document.createElement('a');
+        Adownload.href = "#";
+        Adownload.innerText = "Download";
+        Adownload.classList.add('Download-Link');
+
+        Adownload.addEventListener('click', (e) => {
+        e.preventDefault();
+        CurrentDownloadLink = result.links.download + "&force=true";
+        DownloadPopup.style.display = "flex";
+        if(confirmDownload){
+            const tempLink = document.createElement('a');
+            tempLink.href = result.links.download + "&force=true";
+            tempLink.setAttribute('download', 'image.jpg');
+            document.body.appendChild(tempLink);
+            tempLink.click();
+            document.body.removeChild(tempLink);
+        }
+});
+
+    const imgA = document.createElement('a');
+
+    imgA.href = result.links.html;
+    imgA.target = "_blank";
+
+    imgA.appendChild(image);
+    imgA.appendChild(Adownload);
+
+    SearchResult.appendChild(imgA);
+
+});
     ShowMoreBTN.style.display = "block"
     ShowMoreBTN.innerText = "Show More";
     if (Results.length < 12) {
@@ -75,3 +113,24 @@ Search.addEventListener('click',()=>{
     page = 1
     SearchEngine()
 })
+
+YesDownload.addEventListener('click', () => {
+
+    const tempLink = document.createElement('a');
+
+    tempLink.href = CurrentDownloadLink;
+
+    tempLink.setAttribute('download', 'image.jpg');
+
+    document.body.appendChild(tempLink);
+
+    tempLink.click();
+
+    document.body.removeChild(tempLink);
+
+    DownloadPopup.style.display = "none";
+});
+
+ClosePopup.addEventListener('click', () => {
+    DownloadPopup.style.display = "none";
+});
